@@ -1,27 +1,33 @@
-# For more information, please refer to https://aka.ms/vscode-docker-python
+# Use official slim Python image
 FROM python:3-slim
 
+# Expose the port your app will run on
 EXPOSE 8000
 
-# Keeps Python from generating .pyc files in the container
+# Keeps Python from generating .pyc files
 ENV PYTHONDONTWRITEBYTECODE=1
 
-# Turns off buffering for easier container logging
+# Turns off buffering for easier logging
 ENV PYTHONUNBUFFERED=1
 
-# Install pip requirements
-COPY requirements.txt .
-RUN python -m pip install -r requirements.txt
-
+# Set work directory first
 WORKDIR /app
-COPY . /app
 
-# Creates a non-root user with an explicit UID and adds permission to access the /app folder
-# For more info, please refer to https://aka.ms/vscode-docker-python-configure-containers
-RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
+# Copy requirements first (to leverage Docker cache)
+COPY requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the rest of the app
+COPY . .
+
+# Create a non-root user and give permissions
+RUN adduser --disabled-password --gecos "" --uid 5678 appuser \
+    && chown -R appuser /app
 USER appuser
 
-# During debugging, this entry point will be overridden. For more information, please refer to https://aka.ms/vscode-docker-python-debug
-# File wsgi.py was not found. Please enter the Python path to wsgi file.
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "pythonPath.to.wsgi"]
+# Start app with gunicorn
+# Change 'app:app' to your actual module and app object
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]
 

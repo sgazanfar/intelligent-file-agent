@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Livr Intelligent File Processing Agent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: 700;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            background: rgba(102, 126, 234, 0.05);
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: rgba(118, 75, 162, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .upload-area.dragover {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtext {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .file-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+            margin-top: 30px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .file-icon {
+            font-size: 2em;
+            color: #667eea;
+        }
+
+        .file-details h3 {
+            margin: 0;
+            color: #333;
+            font-size: 1.3em;
+        }
+
+        .file-details p {
+            margin: 5px 0 0 0;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .security-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .security-low {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        .security-medium {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .security-high {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .summary-section {
+            margin-top: 25px;
+        }
+
+        .summary-section h4 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .summary-content {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .security-section {
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(255, 235, 238, 0.3);
+            border-radius: 10px;
+            border: 1px solid #ffcdd2;
+        }
+
+        .security-section h4 {
+            color: #c62828;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .recommendations {
+            list-style: none;
+            padding: 0;
+        }
+
+        .recommendations li {
+            padding: 5px 0;
+            color: #666;
+        }
+
+        .error {
+            color: #c62828;
+            background: #ffebee;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .supported-formats {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(102, 126, 234, 0.05);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .supported-formats h4 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .format-tags {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .format-tag {
+            background: #667eea;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: 500;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .upload-area {
+                padding: 40px 15px;
+            }
+            
+            .result-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 Livr Intelligent File Agent</h1>
+        <p class="subtitle">Upload any document and get an AI-powered summary with security analysis</p>
+        
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📄</div>
+            <div class="upload-text">Drop your file here or click to browse</div>
+            <div class="upload-subtext">Supports PDF, DOC, DOCX, Images, Excel, PPT, and more</div>
+            <input type="file" class="file-input" id="fileInput" accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif,.bmp,.tiff,.xlsx,.xls,.csv,.ppt,.pptx,.ppk,.pem,.key,.json,.xml,.yaml,.yml,.md,.html,.htm,.rtf">
+        </div>
+
+        <div style="text-align: center;">
+            <button class="btn" id="uploadBtn" onclick="uploadFile()" disabled>
+                Upload & Analyze
+            </button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Processing your file with AI...</p>
+        </div>
+
+        <div class="results" id="results">
+            <div class="result-header">
+                <div class="file-info">
+                    <div class="file-icon" id="fileIcon">📄</div>
+                    <div class="file-details">
+                        <h3 id="fileName">Document Name</h3>
+                        <p id="fileStats">File stats</p>
+                    </div>
+                </div>
+                <div class="security-badge" id="securityBadge">Low Risk</div>
+            </div>
+
+            <div class="summary-section">
+                <h4>📋 AI Summary</h4>
+                <div class="summary-content" id="summaryContent">
+                    Summary will appear here...
+                </div>
+            </div>
+
+            <div class="security-section" id="securitySection" style="display: none;">
+                <h4>🔒 Security Analysis</h4>
+                <ul class="recommendations" id="recommendations"></ul>
+            </div>
+        </div>
+
+        <div class="supported-formats">
+            <h4>Supported File Types</h4>
+            <div class="format-tags">
+                <span class="format-tag">PDF</span>
+                <span class="format-tag">DOC/DOCX</span>
+                <span class="format-tag">TXT</span>
+                <span class="format-tag">Images</span>
+                <span class="format-tag">Excel</span>
+                <span class="format-tag">PowerPoint</span>
+                <span class="format-tag">JSON/XML</span>
+                <span class="format-tag">Key Files</span>
+                <span class="format-tag">Markdown</span>
+                <span class="format-tag">HTML</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedFile = null;
+        
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+
+        // File input change handler
+        fileInput.addEventListener('change', handleFileSelect);
+
+        // Drag and drop handlers
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('dragleave', handleDragLeave);
+        uploadArea.addEventListener('drop', handleDrop);
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                selectedFile = file;
+                updateUploadArea(file);
+                uploadBtn.disabled = false;
+            }
+        }
+
+        function handleDragOver(event) {
+            event.preventDefault();
+            uploadArea.classList.add('dragover');
+        }
+
+        function handleDragLeave(event) {
+            event.preventDefault();
+            uploadArea.classList.remove('dragover');
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                selectedFile = files[0];
+                updateUploadArea(selectedFile);
+                uploadBtn.disabled = false;
+            }
+        }
+
+        function updateUploadArea(file) {
+            const uploadIcon = uploadArea.querySelector('.upload-icon');
+            const uploadText = uploadArea.querySelector('.upload-text');
+            const uploadSubtext = uploadArea.querySelector('.upload-subtext');
+            
+            uploadIcon.textContent = getFileIcon(file.name);
+            uploadText.textContent = file.name;
+            uploadSubtext.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+        }
+
+        function getFileIcon(filename) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const icons = {
+                'pdf': '📄',
+                'doc': '📝', 'docx': '📝',
+                'txt': '📄', 'md': '📄',
+                'jpg': '🖼️', 'jpeg': '🖼️', 'png': '🖼️', 'gif': '🖼️',
+                'xlsx': '📊', 'xls': '📊', 'csv': '📊',
+                'ppt': '📽️', 'pptx': '📽️',
+                'ppk': '🔐', 'pem': '🔐', 'key': '🔐',
+                'json': '💾', 'xml': '💾', 'yaml': '💾',
+                'html': '🌐', 'htm': '🌐'
+            };
+            return icons[ext] || '📄';
+        }
+
+        async function uploadFile() {
+            if (!selectedFile) return;
+
+            // Show loading
+            loading.style.display = 'block';
+            results.style.display = 'none';
+            uploadBtn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    displayResults(result);
+                } else {
+                    displayError(result.error || 'Upload failed');
+                }
+            } catch (error) {
+                displayError('Network error: ' + error.message);
+            } finally {
+                loading.style.display = 'none';
+                uploadBtn.disabled = false;
+            }
+        }
+
+        function displayResults(result) {
+            // Update file info
+            document.getElementById('fileName').textContent = result.filename;
+            document.getElementById('fileStats').textContent = 
+                `${result.file_type} • ${result.content_length} characters • ${new Date(result.processed_at).toLocaleString()}`;
+            document.getElementById('fileIcon').textContent = getFileIcon(result.filename);
+
+            // Update security badge
+            const securityBadge = document.getElementById('securityBadge');
+            const riskLevel = result.security_analysis.risk_level;
+            securityBadge.textContent = riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1) + ' Risk';
+            securityBadge.className = `security-badge security-${riskLevel}`;
+
+            // Update summary
+            document.getElementById('summaryContent').innerHTML = result.summary.replace(/\n/g, '<br>');
+
+            // Update security section
+            const securitySection = document.getElementById('securitySection');
+            if (result.security_analysis.has_sensitive_content) {
+                securitySection.style.display = 'block';
+                const recommendations = document.getElementById('recommendations');
+                recommendations.innerHTML = '';
+                
+                result.security_analysis.recommendations.forEach(rec => {
+                    const li = document.createElement('li');
+                    li.textContent = rec;
+                    recommendations.appendChild(li);
+                });
+            } else {
+                securitySection.style.display = 'none';
+            }
+
+            // Show results
+            results.style.display = 'block';
+            results.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function displayError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.textContent = message;
+            
+            // Remove any existing error
+            const existingError = document.querySelector('.error');
+            if (existingError) {
+                existingError.remove();
+            }
+            
+            results.style.display = 'none';
+            document.querySelector('.container').appendChild(errorDiv);
+            
+            setTimeout(() => {
+                errorDiv.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
